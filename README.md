@@ -1,6 +1,6 @@
-## Customer Analysis
+## Not All Customers Are Created Equal
 
-This repository contains code used for an analysis of customer data for a software company.
+Have you ever wondered who your most valuable customers are? This project, created for a software company, aims to discover what makes their users unique and how to identify those who stand out above the rest.
 
 ## Updates
 
