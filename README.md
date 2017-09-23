@@ -2,6 +2,8 @@
 
 Have you ever wondered who your most valuable customers are? This project, created for a software company, aims to discover what makes their users unique and how to identify those who stand out above the rest.
 
+<img src="images/people.jpg" width="600">
+
 ## Updates
 
 #### Current Progress
