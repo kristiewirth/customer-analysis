@@ -1,4 +1,5 @@
 from anonymizingdata import AnonymizingData
+from separatedatasourcecleaning import SeparateDataSets
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -21,18 +22,20 @@ import pudb
 class DataCleaning(object):
 
     def __init__(self):
-        pass
-
-    def _intializing_data(self):
         # Importing functions to anonymize data
         self.hidden = AnonymizingData()
 
+    def intializing_data(self):
         # Force pandas & numpy to display all data
         pd.set_option('display.max_columns', None)
         pd.set_option('display.max_rows', None)
         pd.set_option('max_info_columns', 100000)
         pd.set_option('max_seq_items', None)
         np.set_printoptions(threshold=np.nan)
+
+        # Run file that sets up each dataset separately and pickles them for use in this main file
+        sds = SeparateDataSets()
+        sds.pickle_all()
 
         # Loading in all datasets
         revenue_df = pd.read_pickle('../data/all-datasets/revenue_df')
@@ -60,7 +63,7 @@ class DataCleaning(object):
         self.df = pd.merge(self.df, help_scout_df, how='left', left_on='revenue:email',
                            right_on='helpscout:emails')  # 21% null
 
-    def _cleaning_data(self):
+    def cleaning_data(self):
         # Force stray unicode into strings
         categorical_vals = self.df.select_dtypes(exclude=['float64', 'int64'])
         for column in categorical_vals.columns:
@@ -93,6 +96,9 @@ class DataCleaning(object):
         self.df['helpscout:number_support_tickets'] = self.df['helpscout:number_support_tickets'].astype(
             int)
 
+        # Pickling df for EDA (before dropping columns)
+        self.df.to_pickle('../data/all-datasets/original_df')
+
         # Dropping a long list of columns that have large portions of nulls, are identifiers,
         # have only one value, those with leakage, and any date columns
         self.df = self.hidden.drop_columns(self.df)
@@ -105,7 +111,7 @@ class DataCleaning(object):
         categorical_vals = X.drop(numerical_vals, axis=1)
         return numerical_vals, categorical_vals
 
-    def _modeling_prep(self):
+    def modeling_prep(self):
         # Creating X & y variables
         y = self.df.pop('edd:licenses_license3')
         X = self.df
@@ -181,7 +187,7 @@ class DataCleaning(object):
 
         return X_train_scaled, X_test_scaled, y_train, y_test, X_train
 
-    def _model_testing(self, model, X_train_scaled, y_train, X_train):
+    def model_testing(self, model, X_train_scaled, y_train, X_train):
         if model == 'LogisticRegression':
             model = LogisticRegression()
             # param_list = {'penalty': ['l1', 'l2'], 'C': [1, 5, 10, 15]}
@@ -255,33 +261,29 @@ class DataCleaning(object):
             sns.lmplot('pca1', 'pca2', data=X_train, hue='cluster', fit_reg=False)
             plt.savefig('../images/customer_clusters.png', dpi=300)
 
-    def run_pipeline(self, model):
-        # self._intializing_data()
-        # self._cleaning_data()
-        # X_train_scaled, X_test_scaled, y_train, y_test, X_train = self._modeling_prep()
-        #
-        # # Compressing data for faster performance
-        # args = {'X_train_scaled': X_train_scaled,
-        #         'X_test_scaled': X_test_scaled, 'y_train': y_train, 'y_test': y_test}
-        # np.savez_compressed('../data/Xycompressed_classification', **args)
-        # X_train.to_pickle('../data/X_train')
-
-        # # Loading compressed data
-        npz = np.load('../data/Xycompressed_classification.npz')
-        X_train_scaled = npz['X_train_scaled']
-        X_test_scaled = npz['X_test_scaled']
-        y_train = npz['y_train']
-        y_test = npz['y_test']
-        X_train = pd.read_pickle('../data/X_train')
-
-        # self.clustering(X_train, y_train, graph=True)
-        self._model_testing(model, X_train_scaled, y_train, X_train)
-        return X_train
-
 
 if __name__ == '__main__':
     dc = DataCleaning()
-    X_train = dc.run_pipeline('DecisionTreeClassifier')
+
+    dc.intializing_data()
+    dc.cleaning_data()
+    X_train_scaled, X_test_scaled, y_train, y_test, X_train = dc.modeling_prep()
+
+    # Compressing data for faster performance
+    args = {'X_train_scaled': X_train_scaled,
+            'X_test_scaled': X_test_scaled, 'y_train': y_train, 'y_test': y_test}
+    np.savez_compressed('../data/all-datasets/Xycompressed_classification', **args)
+    X_train.to_pickle('../data/all-datasets/X_train')
+
+    # # Loading compressed data
+    npz = np.load('../data/all-datasets/Xycompressed_classification.npz')
+    X_train_scaled = npz['X_train_scaled']
+    X_test_scaled = npz['X_test_scaled']
+    y_train = npz['y_train']
+    y_test = npz['y_test']
+    X_train = pd.read_pickle('../data/all-datasets/X_train')
+
+    dc.model_testing('DecisionTreeClassifier', X_train_scaled, y_train, X_train)
 
     ##################################################
     # Decision tree
