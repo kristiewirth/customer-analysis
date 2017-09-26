@@ -6,11 +6,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.linear_model import ElasticNet, SGDRegressor, Lasso
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.svm import SVR
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import SGDClassifier, LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, AdaBoostClassifier
 from pprint import pprint
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -107,7 +107,7 @@ class DataCleaning(object):
 
     def _modeling_prep(self):
         # Creating X & y variables
-        y = self.df.pop('revenue:purchase_value')
+        y = self.df.pop('edd:licenses_license3')
         X = self.df
 
         # Sorting self.df into numerical and not for scaler
@@ -126,12 +126,11 @@ class DataCleaning(object):
         bar = progressbar.ProgressBar()
         print('Dropping nan columns')
         for column in bar(X.columns):
-            print(column)
             if '_nan' in column or '_unknown' in column or '@' in column:
                 X.drop(column, inplace=True, axis=1)
 
         # Train test split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=42)
 
         # Quick fill numerical null values
         numerical_vals, categorical_vals = self._reset_data_types(X)
@@ -149,17 +148,22 @@ class DataCleaning(object):
             except:
                 continue
 
-        # # Best features (according to Lasso)
-        model = Lasso(alpha=0.1)
-        model.fit(X_train, y_train)
-        coefs = list(model.coef_)
-        features = list(X_train.columns)
-        importances = []
-        for x, y in zip(features, coefs):
-            importances.append([x, y])
-            best_features = [x for x in importances if x[1] != 0.0]
-            best_features = [x[0] for x in best_features]
-            X_train_reduced = X_train[best_features]
+        # Force y values into integers for algorithms (not floats)
+        y_train = y_train.astype(int)
+        y_test = y_test.astype(int)
+
+        # Feature selection using l1 logistic regression
+        # model = LogisticRegression(penalty='l2', C=15)
+        # model.fit(X_train, y_train)
+        # coefs = list(model.coef_)[0]
+        # features = list(X_train.columns)
+        # importances = []
+        # for x, y in zip(features, coefs):
+        #     importances.append([x, y])
+        #     best_features = [x for x in importances if x[1] != 0.0]
+        #     best_features = [x[0] for x in best_features]
+        #     X_train_reduced = X_train[best_features]
+        X_train_reduced = X_train
 
         # Scaling train data
         scaler = StandardScaler()
@@ -178,27 +182,40 @@ class DataCleaning(object):
         return X_train_scaled, X_test_scaled, y_train, y_test, X_train
 
     def _model_testing(self, model, X_train_scaled, y_train, X_train):
-        if model == 'ElasticNet':
-            model = ElasticNet()
-            param_list = {'alpha': [0.001, 0.01, 0.1, 1.0]}
-        elif model == 'KNeighborsRegressor':
-            model = KNeighborsRegressor()
-            param_list = {'n_neighbors': [5, 10, 20]}
-        elif model == 'DecisionTreeRegressor':
-            model = DecisionTreeRegressor()
+        if model == 'LogisticRegression':
+            model = LogisticRegression()
+            # param_list = {'penalty': ['l1', 'l2'], 'C': [1, 5, 10, 15]}
+            param_list = {'penalty': ['l1', 'l2'], 'C': np.arange(5, 25, 2)}
+        elif model == 'KNeighborsClassifier':
+            model = KNeighborsClassifier()
+            # param_list = {'n_neighbors': [5, 10, 15]}
+            param_list = {'n_neighbors': np.arange(2, 20, 2)}
+        elif model == 'DecisionTreeClassifier':
+            model = DecisionTreeClassifier()
+            # param_list = {'min_samples_split': [.25, .5, 1.0], 'max_depth': [5, 10, 20]}
+            param_list = {'criterion': ['gini', 'entropy'], 'max_depth': np.arange(15, 100, 2),
+                          'min_samples_split': [0.1], 'max_features': np.arange(0.5, 0.9, 0.1)}
+        elif model == 'SVC':
+            model = SVC(kernel='linear')
+            # param_list = {'C': [1, 5, 10]}
+            param_list = {'C': np.arange(5, 25, 2)}
+        elif model == 'SGDClassifier':
+            model = SGDClassifier()
+            # param_list = {'alpha': [0.001, 0.01, 0.1]}
+            param_list = {'alpha': np.arange(0.00001, 0.001, 0.0001)}
+        elif model == 'RandomForestClassifier':
+            model = RandomForestClassifier()
             param_list = {'min_samples_split': [.25, .5, 1.0], 'max_depth': [5, 10, 20]}
-        elif model == 'SGDRegressor':
-            model = SGDRegressor()
-            param_list = {'alpha': [0.001, 0.01, 0.1, 1.0], 'penalty': ['l1', 'l2']}
-        elif model == 'SVR':
-            model = SVR(kernel='linear')
-            param_list = {'C': [1, 5, 10, 15]}
-        elif model == 'RandomForestRegressor':
-            model = RandomForestRegressor()
-            param_list = {'min_samples_split': [.25, .5, 1.0], 'max_depth': [5, 10, 20]}
+        elif model == 'BaggingClassifier':
+            model = BaggingClassifier()
+            param_list = {'n_estimators': [5, 10, 15],
+                          'max_samples': [.5, 1], 'max_features': [.5, 1]}
+        elif model == 'AdaBoostClassifier':
+            model = AdaBoostClassifier()
+            param_list = {'n_estimators': [5, 10, 15], 'learning_rate': [0.001, 0.01, 0.1]}
 
         # Grid searching hyperparameters
-        g = GridSearchCV(model, param_list, scoring='r2',
+        g = GridSearchCV(model, param_list, scoring='f1_weighted',
                          cv=5, n_jobs=-1, verbose=10)
         g.fit(X_train_scaled, y_train)
         results = g.cv_results_
@@ -208,15 +225,16 @@ class DataCleaning(object):
         print('Best Params: {}, Best Score: {}'.format(g.best_params_, g.best_score_))
         print('\n\n')
 
-        coefs = list(g.best_estimator_.coef_)
+        coefs = list(g.best_estimator_.coef_)[0]
         features = list(X_train.columns)
+
         importances = []
         for x, y in zip(features, coefs):
             importances.append([x, y])
 
         importances.sort(key=lambda row: abs(row[1]), reverse=True)
         print('Coefficients:')
-        for pair in importances[:100]:
+        for pair in importances[:600]:
             print(pair)
 
     def clustering(self, X_train, y_train, graph=False):
@@ -237,22 +255,24 @@ class DataCleaning(object):
             sns.lmplot('pca1', 'pca2', data=X_train, hue='cluster', fit_reg=False)
             plt.savefig('../images/customer_clusters.png', dpi=300)
 
-    def run_pipeline(self, model='ElasticNet'):
-        self._intializing_data()
-        self._cleaning_data()
-        X_train_scaled, X_test_scaled, y_train, y_test, X_train = self._modeling_prep()
+    def run_pipeline(self, model):
+        # self._intializing_data()
+        # self._cleaning_data()
+        # X_train_scaled, X_test_scaled, y_train, y_test, X_train = self._modeling_prep()
+        #
+        # # Compressing data for faster performance
+        # args = {'X_train_scaled': X_train_scaled,
+        #         'X_test_scaled': X_test_scaled, 'y_train': y_train, 'y_test': y_test}
+        # np.savez_compressed('../data/Xycompressed_classification', **args)
+        # X_train.to_pickle('../data/X_train')
 
-        # Compressing data for faster performance
-        args = {'X_train_scaled': X_train_scaled,
-                'X_test_scaled': X_test_scaled, 'y_train': y_train, 'y_test': y_test}
-        np.savez_compressed('../data/Xycompressed_regression', **args)
-
-        # Loading compressed data
-        # npz = np.load('../data/Xycompressed_regression.npz')
-        # X_train_scaled = npz['X_train_scaled']
-        # X_test_scaled = npz['X_test_scaled']
-        # y_train = npz['y_train']
-        # y_test = npz['y_test']
+        # # Loading compressed data
+        npz = np.load('../data/Xycompressed_classification.npz')
+        X_train_scaled = npz['X_train_scaled']
+        X_test_scaled = npz['X_test_scaled']
+        y_train = npz['y_train']
+        y_test = npz['y_test']
+        X_train = pd.read_pickle('../data/X_train')
 
         # self.clustering(X_train, y_train, graph=True)
         self._model_testing(model, X_train_scaled, y_train, X_train)
@@ -261,6 +281,20 @@ class DataCleaning(object):
 
 if __name__ == '__main__':
     dc = DataCleaning()
-    X_train = dc.run_pipeline('ElasticNet')
+    X_train = dc.run_pipeline('DecisionTreeClassifier')
 
-    #########################
+    ##################################################
+    # Decision tree
+    # Best Params: {'max_features': 0.59999999999999998, 'min_samples_split': 0.1, 'criterion': 'gini', 'max_depth': 23}, Best Score: 0.797351847402
+    ##################################################
+    # Logistic regression
+    # Best Params: {'penalty': 'l2', 'C': 15}, Best Score: 0.787997856311
+    ##################################################
+    # SVC (linear)
+    # Best Params: {'C': 5}, Best Score: 0.767679168076
+    ##################################################
+    # SGDClassifier
+    # Best Params: {'alpha': 0.00091000000000000011}, Best Score: 0.790229391565
+    ##################################################
+    # KNeighborsClassifier
+    # Best Params: {'n_neighbors': 5}, Best Score: 0.772965894112
