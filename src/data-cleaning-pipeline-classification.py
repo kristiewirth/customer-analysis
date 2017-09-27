@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.linear_model import SGDClassifier, LogisticRegression
+from sklearn.linear_model import SGDClassifier, LogisticRegression, LinearRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
@@ -16,7 +16,7 @@ from pprint import pprint
 import seaborn as sns
 import matplotlib.pyplot as plt
 import progressbar
-import pudb
+import sys
 
 
 class DataCleaning(object):
@@ -64,13 +64,9 @@ class DataCleaning(object):
                            right_on='helpscout:emails')  # 21% null
 
     def cleaning_data(self):
-        # Force stray unicode into strings
-        categorical_vals = self.df.select_dtypes(exclude=['float64', 'int64'])
-        for column in categorical_vals.columns:
-            try:
-                self.df[column] = self.df[column].astype(str)
-            except:
-                pass
+        # Reset to fix unicode errors
+        reload(sys)
+        sys.setdefaultencoding('utf8')
 
         # Consolidating any duplicate customer rows
         self.df = self.df.groupby('revenue:email').first().reset_index()
@@ -89,15 +85,15 @@ class DataCleaning(object):
         self.df = self.hidden.clean_initial_dummies(self.df)
 
         # Resetting columns incorrectly coded as numerical
-        self.df[['ga:dayofweek_x', 'ga:dayofweek_y']] = self.df[[
-            'ga:dayofweek_x', 'ga:dayofweek_y']].astype(object)
+        self.df[['ga:dayofweek_x', 'ga:dayofweek_y', 'turk:answer.well-made_y']] = self.df[[
+            'ga:dayofweek_x', 'ga:dayofweek_y', 'turk:answer.well-made_y']].astype(object)
 
         # Recoding categorical as numerical
-        self.df['helpscout:number_support_tickets'] = self.df['helpscout:number_support_tickets'].astype(
-            int)
+        self.df[['helpscout:number_support_tickets', 'ga:sessions']] = self.df[['helpscout:number_support_tickets', 'ga:sessions']].astype(
+            float)
 
-        # Pickling df for EDA (before dropping columns)
-        self.df.to_pickle('../data/all-datasets/original_df')
+        # Saving all cleaned data (before dropping columns) for graphing purposes later
+        self.df.to_csv('../data/all-datasets/cleaned_data.csv', index=False)
 
         # Dropping a long list of columns that have large portions of nulls, are identifiers,
         # have only one value, those with leakage, and any date columns
@@ -135,15 +131,50 @@ class DataCleaning(object):
             if '_nan' in column or '_unknown' in column or '@' in column:
                 X.drop(column, inplace=True, axis=1)
 
+        # Saving all cleaned data (after dropping columns) for filling null values
+        X.to_csv('../data/all-datasets/cleaned_data_dropped.csv', index=False)
+
         # Train test split
         X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=42)
 
         # Quick fill numerical null values
-        numerical_vals, categorical_vals = self._reset_data_types(X)
+        # numerical_vals, categorical_vals = self._reset_data_types(X)
+        # for column in numerical_vals.columns:
+        #     mean = X_train[column].mean()
+        #     X_train[column] = X_train[column].fillna(mean)
+        #     X_test[column] = X_test[column].fillna(mean)
+
+        args = {'X_train_scaled': X_train,
+                'X_test_scaled': X_test, 'y_train': y_train, 'y_test': y_test}
+        np.savez_compressed('../data/all-datasets/Xycompressed_classification', **args)
+        X_train.to_pickle('../data/all-datasets/X_train')
         for column in numerical_vals.columns:
-            mean = X_train[column].mean()
-            X_train[column] = X_train[column].fillna(mean)
-            X_test[column] = X_test[column].fillna(mean)
+            # Instantiating model to predict values
+            model = LinearRegression()
+            # Getting indices in which the given column is not null
+            filled = list(X_train[column].dropna().index)
+            # Getting all the X train data for the rows in which the given column is not blank
+            mini_training_data = X_train.drop(column, axis=1).fillna(0).iloc[filled]
+            # Getting the column to be filled data where it is not null
+            mini_training_target = X_train[column].iloc[filled]
+            # Fitting the model that will be used to fill the null values
+            model.fit(mini_training_data, mini_training_target)
+            # Getting indices in which the given column is null
+            nulls = [x for x in X_train.index if x not in filled]
+            # Getting all the X train data for the rows in which the given column has blank values
+            mini_testing_data = X_train.drop(column, axis=1).fillna(0).iloc[nulls]
+            # Predicting the values of the given column where it is blank
+            predictions1 = model.predict(mini_testing_data)
+            # Filling in the values that are blank using the predictions
+            X_train[column].iloc[nulls] = predictions1
+            # Repeating the process for X test (but just using the already trained model)
+            nulls = [x for x in X_test.index if x not in filled]
+            # Getting all the X test data for the rows in which the given column has blank values
+            mini_testing_data = X_test.drop(column, axis=1).fillna(0).iloc[nulls]
+            # Predicting the values of the given column where it is blank
+            predictions2 = model.predict(mini_testing_data)
+            # Filling in the values that are blank using the predictions
+            X_test[column].iloc[nulls] = predictions2
 
         # Dropping any remaining columns with nulls
         for column in X_train.columns:
@@ -283,11 +314,11 @@ if __name__ == '__main__':
     y_test = npz['y_test']
     X_train = pd.read_pickle('../data/all-datasets/X_train')
 
-    dc.model_testing('DecisionTreeClassifier', X_train_scaled, y_train, X_train)
+    # dc.model_testing('DecisionTree', X_train_scaled, y_train, X_train)
 
     ##################################################
     # Decision tree
-    # Best Params: {'max_features': 0.59999999999999998, 'min_samples_split': 0.1, 'criterion': 'gini', 'max_depth': 23}, Best Score: 0.797351847402
+    # Best Params: {'max_features': 0.79999999999999993, 'min_samples_split': 0.1, 'criterion': 'entropy', 'max_depth': 41}, Best Score: 0.801013671396
     ##################################################
     # Logistic regression
     # Best Params: {'penalty': 'l2', 'C': 15}, Best Score: 0.787997856311

@@ -8,13 +8,13 @@ Have you ever wondered who your most valuable customers are? This project, creat
 
 #### Current Progress
 
-* Further cleaned up pipeline; combined all cleaning data files into one process
-* Developed model to identify customers most likely to purchase the highest value license
+* Developed mini model to fill null values in dataset and working to implement
+* Added information on number of support tickets, number of business days of those tickets, and an adjusted revenue variable for loss due to extra work
 
 #### Next Steps
 
-* Develop mini-models to fill nulls more accurately
 * Engineer more features in order to reduce errors
+* Use SMOTE to create synthetic samples of target
 
 ## Project Outline
 
@@ -34,23 +34,18 @@ File date range: 07/25/14 - 08/31/17
 
 #### Project Goals
 
-* Customer segmentation
-  * Which groups generate the most revenue?
-  * What factors are most predictive of revenue from each group?
-  * Use this information to create custom marketing/landing pages/pricing for each group
-* Reducing support tickets
-  * What factors are most predictive of low numbers of support tickets?
-  * Use this information for identifying high value, low involvement customers
+* Which group of customers generate the most revenue?
+* Which will generate more revenue - many small purchases with little support work or a few large purchases with many hours of support work needed?
+* What factors contribute to a customer being more likely to be more profitable?
 
 #### Planned Methods
 
   * Obtaining data - used a combination of API's and direct downloads to obtain the data from the above sources
-  * Customer segmentation - KMeans clustering
-  * Profit predictions per cluster
+  * Predicting type of license bought
     * Regression analysis
     * KNeighbors
     * Decision trees
-    * SVR (linear kernel)
+    * SVC (linear kernel)
     * SGD
 
 #### Technologies Used
@@ -59,6 +54,9 @@ File date range: 07/25/14 - 08/31/17
 * Pandas
 * Numpy
 * AWS (EC2 instance)
+* Sklearn
+* Seaborn
+* Matplotlib
 
 #### Deliverables
 
