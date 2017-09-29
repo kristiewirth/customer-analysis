@@ -8,13 +8,14 @@ Have you ever wondered who your most valuable customers are? This project, creat
 
 #### Current Progress
 
-* Developed mini model to fill null values in dataset and working to implement
-* Added information on number of support tickets, number of business days of those tickets, and an adjusted revenue variable for loss due to extra work
+* Experimented with regression models (predicting adjusted revenue) vs classification models (predicting those who bought the most advanced license)
+* Engineered more features
+* Adjusted filling of null values to use means and a smaller regression model
 
 #### Next Steps
 
-* Engineer more features in order to reduce errors
-* Use SMOTE to create synthetic samples of target
+* Create features from text analysis
+* Develop visualizations to summarize main findings
 
 ## Project Outline
 

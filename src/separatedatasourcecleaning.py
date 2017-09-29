@@ -11,31 +11,31 @@ class SeparateDataSets(object):
 
     def google_plus_EDD(self):
         # Reading in all the separate csv files
-        df1 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2014-10-31',
+        df1 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2014-10-31.csv',
                           low_memory=False, na_values='(not set)')
-        df2 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2015-01-31',
+        df2 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2015-01-31.csv',
                           low_memory=False, na_values='(not set)')
-        df3 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2015-04-31',
+        df3 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2015-04-31.csv',
                           low_memory=False, na_values='(not set)')
-        df4 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2015-07-31',
+        df4 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2015-07-31.csv',
                           low_memory=False, na_values='(not set)')
-        df5 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2015-10-31',
+        df5 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2015-10-31.csv',
                           low_memory=False, na_values='(not set)')
-        df6 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2016-01-31',
+        df6 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2016-01-31.csv',
                           low_memory=False, na_values='(not set)')
-        df7 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2016-04-31',
+        df7 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2016-04-31.csv',
                           low_memory=False, na_values='(not set)')
-        df8 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2016-07-31',
+        df8 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2016-07-31.csv',
                           low_memory=False, na_values='(not set)')
-        df9 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2016-10-31',
+        df9 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2016-10-31.csv',
                           low_memory=False, na_values='(not set)')
-        df10 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2017-01-31',
+        df10 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2017-01-31.csv',
                            low_memory=False, na_values='(not set)')
-        df11 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2017-04-31',
+        df11 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2017-04-31.csv',
                            low_memory=False, na_values='(not set)')
-        df12 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2017-07-31',
+        df12 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2017-07-31.csv',
                            low_memory=False, na_values='(not set)')
-        df13 = pd.read_csv('google-data/google_dimensions_9-20-17_enddate_2017-08-31',
+        df13 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2017-08-31.csv',
                            low_memory=False, na_values='(not set)')
 
         # Concatenating files
@@ -43,46 +43,51 @@ class SeparateDataSets(object):
                         df9, df10, df11, df12, df13], axis=0)
 
         # Reading in all the separate csv files for the rest of the dimensions
-        df1 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2014-10-31',
+        df1 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2014-10-31.csv',
                           low_memory=False, na_values='(not set)')
-        df2 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2015-01-31',
+        df2 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2015-01-31.csv',
                           low_memory=False, na_values='(not set)')
-        df3 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2015-04-31',
+        df3 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2015-04-31.csv',
                           low_memory=False, na_values='(not set)')
-        df4 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2015-07-31',
+        df4 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2015-07-31.csv',
                           low_memory=False, na_values='(not set)')
-        df5 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2015-10-31',
+        df5 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2015-10-31.csv',
                           low_memory=False, na_values='(not set)')
-        df6 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2016-01-31',
+        df6 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2016-01-31.csv',
                           low_memory=False, na_values='(not set)')
-        df7 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2016-04-31',
+        df7 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2016-04-31.csv',
                           low_memory=False, na_values='(not set)')
-        df8 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2016-07-31',
+        df8 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2016-07-31.csv',
                           low_memory=False, na_values='(not set)')
-        df9 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2016-10-31',
+        df9 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2016-10-31.csv',
                           low_memory=False, na_values='(not set)')
-        df10 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2017-01-31',
+        df10 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2017-01-31.csv',
                            low_memory=False, na_values='(not set)')
-        df11 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2017-04-31',
+        df11 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2017-04-31.csv',
                            low_memory=False, na_values='(not set)')
-        df12 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2017-07-31',
+        df12 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2017-07-31.csv',
                            low_memory=False, na_values='(not set)')
-        df13 = pd.read_csv('google-data/google_dimensions_second_run_9-20-17_enddate_2017-08-31',
+        df13 = pd.read_csv('../data/google-data/google_dimensions_second_run_9-20-17_enddate_2017-08-31.csv',
                            low_memory=False, na_values='(not set)')
 
         # Concatenating files
         dfb = pd.concat([df1, df2, df3, df4, df5, df6, df7, df8,
                          df9, df10, df11, df12, df13], axis=0)
 
+        # Loading metrics
+        dfc = pd.read_csv('../data/google-data/google_metrics_9-20-17.csv')
+
         # Consolidating data to one row per transaction id using lists
         df = df.groupby('ga:transactionId').first().reset_index()
         dfb = dfb.groupby('ga:transactionId').first().reset_index()
+        dfc = dfc.groupby('ga:transactionId').first().reset_index()
 
         # Merging all google datasets
         google_df = pd.merge(df, dfb, how='outer', on='ga:transactionId')
+        google_df = pd.merge(google_df, dfc, how='outer', on='ga:transactionId')
 
         # Reading in EDD_df
-        EDD_df = pd.read_csv('../EDD/payment-history-9-1-17.csv')
+        EDD_df = pd.read_csv('../data/EDD/payment-history-9-1-17.csv')
 
         # Renaming columns for datasource
         EDD_df.rename(columns=lambda x: 'EDD:' + x, inplace=True)
@@ -92,7 +97,7 @@ class SeparateDataSets(object):
                                        left_on='EDD:Payment ID', right_on='ga:transactionId')
 
         # Creating pickled dataset
-        all_transactions_df.to_pickle('all_transactions_google_EDD')
+        all_transactions_df.to_pickle('../data/EDD/all_transactions_google_EDD')
 
     def meta_data_cleaning(self):
         # Reading CSV
@@ -122,8 +127,8 @@ class SeparateDataSets(object):
         revenue_df.to_pickle('../data/all-datasets/revenue_df')
 
     def transaction_data_cleaning(self):
-        # Reading CSV
-        EDD_df = pd.read_pickle('../data/google-analytics/all_transactions_google_EDD')
+        # Reading pickle
+        EDD_df = pd.read_pickle('../data/EDD/all_transactions_google_EDD')
 
         # Keeping completed statuses only
         EDD_df = EDD_df[EDD_df['EDD:Status'] == 'complete']
@@ -181,7 +186,9 @@ class SeparateDataSets(object):
         # Renaming columns for easier use
         EDD_df.rename(columns=lambda x: x.strip().lower().replace(" ", "_"), inplace=True)
 
-        # Consolidating to one row per customer
+        # Consolidating to one row per customer - taking the latest purchase they have made only
+        EDD_df['edd:date'] = pd.to_datetime(EDD_df['edd:date'])
+        EDD_df = EDD_df.sort_values('edd:date', ascending=False)
         EDD_df = EDD_df.groupby('edd:email').first().reset_index()
 
         # Pickling data
@@ -198,6 +205,29 @@ class SeparateDataSets(object):
         intercom_df.rename(columns=lambda x: (
             'intercom:' + x).strip().lower().replace(" ", "_"), inplace=True)
 
+        # Creating dummy variables from list data
+        intercom_df['index'] = intercom_df.index
+        lst = []
+        for x in intercom_df['intercom:segment']:
+            try:
+                if ',' in x:
+                    temp = x.split(',')
+                    lst.append([x.strip('"') for x in temp])
+                else:
+                    lst.append([x.strip('"')])
+            except:
+                lst.append([])
+        intercom_df['intercom:segment'] = lst
+        temp_df = pd.DataFrame(intercom_df['intercom:segment'].apply(pd.Series).stack())
+        temp_df.columns = ['intercom:segment']
+        temp_df['values'] = 1
+        temp_df['index'] = [x[0] for x in temp_df.index]
+        temp_df = pd.DataFrame(temp_df.pivot(
+            columns='intercom:segment', index='index', values='values')).reset_index()
+        intercom_df = pd.merge(intercom_df, temp_df, left_on='index',
+                               right_on='index', how='left')
+        intercom_df.drop('index', inplace=True, axis=1)
+
         # Pickling data
         intercom_df.to_pickle('../data/all-datasets/intercom_df')
 
@@ -208,6 +238,28 @@ class SeparateDataSets(object):
         # Renaming columns
         drip_df.rename(columns=lambda x: (
             'drip:' + x).strip().lower().replace(" ", "_"), inplace=True)
+
+        # Creating dummy variables from list data
+        drip_df['index'] = drip_df.index
+        lst = []
+        for x in drip_df['drip:campaign_names']:
+            try:
+                if ',' in x:
+                    lst.append(x.split(','))
+                else:
+                    lst.append([x.strip('"')])
+            except:
+                lst.append([])
+        drip_df['drip:campaign_names'] = lst
+        temp_df = pd.DataFrame(drip_df['drip:campaign_names'].apply(pd.Series).stack())
+        temp_df.columns = ['drip:campaign_names']
+        temp_df['values'] = 1
+        temp_df['index'] = [x[0] for x in temp_df.index]
+        temp_df = pd.DataFrame(temp_df.pivot(
+            columns='drip:campaign_names', index='index', values='values')).reset_index()
+        drip_df = pd.merge(drip_df, temp_df, left_on='index',
+                           right_on='index', how='left')
+        drip_df.drop('index', inplace=True, axis=1)
 
         # Pickling data
         drip_df.to_pickle('../data/all-datasets/drip_df')
@@ -288,13 +340,37 @@ class SeparateDataSets(object):
             except:
                 lst.append(x)
         help_scout_df['helpscout:emails'] = lst
-        # Fixing unicode problem
-        help_scout_df['helpscout:emails'] = help_scout_df['helpscout:emails'].astype(str)
+
+        # Creating dummy variables from list data
+        help_scout_df['index'] = help_scout_df.index
+        lst = []
+        for x in help_scout_df['helpscout:email_types']:
+            try:
+                lst.append(list(set(x)))
+            except:
+                lst.append([])
+        help_scout_df['helpscout:email_types'] = lst
+        for column in ['helpscout:phone_types', 'helpscout:email_types']:
+            temp_df = pd.DataFrame(help_scout_df[column].apply(pd.Series).stack())
+            temp_df.columns = [column]
+            temp_df['values'] = 1
+            temp_df['index'] = [x[0] for x in temp_df.index]
+            temp_df = pd.DataFrame(temp_df.pivot(
+                columns=column, index='index', values='values')).reset_index()
+            if column == 'helpscout:phone_types':
+                temp_df.columns = ['index', 'home_phone', 'mobile_phone', 'work_phone']
+            elif column == 'helpscout:email_types':
+                temp_df.columns = ['index', 'other_type_email', 'work_email']
+            help_scout_df = pd.merge(help_scout_df, temp_df, left_on='index',
+                                     right_on='index', how='left')
+        help_scout_df.drop('index', inplace=True, axis=1)
 
         # Pickling data
-        help_scout_df.to_pickle('../data/all-datasets/help_scout_df')
+        # help_scout_df.to_pickle('../data/all-datasets/help_scout_df')
+        help_scout_df.to_csv('../data/all-datasets/help_scout_df')
 
     def pickle_all(self):
+        # self.google_plus_EDD()
         self.meta_data_cleaning()
         self.revenue_data_cleaning()
         self.transaction_data_cleaning()
