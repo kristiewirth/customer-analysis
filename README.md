@@ -4,13 +4,13 @@ Have you ever wondered who your most valuable customers are? This project, creat
 
 <img src='images/people.jpg' width='600'>
 
-#### Project Goals
+### Project Goals
 
 * Which group of customers generate the most revenue?
 * Which will generate more revenue - many small purchases with little support work or a few large purchases with many hours of support work needed?
 * What factors contribute to a customer being more likely to be more profitable?
 
-#### Data Sources
+### Data Sources
 
 Note: These data sources are stored separately in a private repository and contain data from 07/2014 through 08/2017.
 
@@ -22,7 +22,7 @@ Note: These data sources are stored separately in a private repository and conta
 * HubSpot - Tracks data on marketing and sales campaigns
 * HelpScout - Tracks data on support tickets
 
-#### Technologies Used
+### Technologies Used
 
 * Python
 * Pandas
@@ -31,7 +31,7 @@ Note: These data sources are stored separately in a private repository and conta
 * Sklearn
 * Tableau
 
-#### Summary
+### Summary
 
 A combination of using APIs (Google Analytics, Helpscout) and direct downloads was used to obtain data from the above sources.
 
