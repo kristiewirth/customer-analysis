@@ -34,21 +34,21 @@ Furthermore, given that the data was coming from different sources, there were p
 
 Given that the goal was to predict high value customers, some initial regression models were created to predict revenue per customer. Techniques used included ElasticNet regression, KNeighbors, decision trees, SVC, SGD, and random forests. However, given that there was not much variance in revenue per customer, these predictions had large error rates.
 
-<img src='images/revenue-distribution.png' width='600'>
+<img src='images/revenue-distribution.png' width='900'>
 
 Given these challenges, other ways of measuring benefit per customer was explored. The company studied had three different software licenses available, with License 1 being the least expensive and License 3 being the most expensive.
 
-<img src='images/revenue-by-license.png' width='600'>
+<img src='images/revenue-by-license.png' width='900'>
 
 After discussions with the company, it was decided that revenue was only part of what made a customer valuable. In addition, having a low quantity of support tickets, that were open for shorter periods of time, required less support work and were also quite valuable.
 
-<img src='images/support-tickets-by-license.png' width='600'>
+<img src='images/support-tickets-by-license.png' width='900'>
 
 Based on internal calculations, it was decided that for a given customer, each day that a support ticket remained open was a loss in revenue of $10. Using the total revenue minus adjustments for support tickets, an adjusted revenue per customer was calculated.
 
 Despite the fact that License 3 customers tended to submit more support tickets, this group still brought in the most revenue per customer on average.
 
-<img src='images/adjusted-revenue-by-license.png' width='600'>
+<img src='images/adjusted-revenue-by-license.png' width='900'>
 
 Based on these findings, customers who bought the License 3 were determined to be highly valuable, and thus were the target of the rest of the study. Various classification models were tested to determine which customers were more likely to buy this license at any point. Specifically, the following techniques were tested: logistic regression, KNeighbors, decision trees, SVR, SGD, bagging methods, and random forests.
 
@@ -56,9 +56,9 @@ Simpler methods performed similarly to the more complex methods, so a basic logi
 
 Many features were determined to be predictive of purchasing this high value license, most notably the customer location and their website category.
 
-<img src='images/likelihood-by-country.png' width='600'>
+<img src='images/likelihood-by-country.png' width='900'>
 
-<img src='images/likelihood-by-customer-category.png' width='600'>
+<img src='images/likelihood-by-customer-category.png' width='900'>
 
 Potential directions for future studies include: adding features to the existing model related to text analysis of website descriptions and support ticket text, developing a model to predict website visitors who are most likely to continue on to make a purchase, and developing a model to predict warning signs for customer churn.
 
