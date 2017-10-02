@@ -29,8 +29,7 @@ Note: These data sources are stored separately in a private repository and conta
 * Numpy
 * AWS (EC2 instances)
 * Sklearn
-* Seaborn
-* Matplotlib
+* Tableau
 
 #### Summary
 
