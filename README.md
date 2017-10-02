@@ -4,8 +4,6 @@ Have you ever wondered who your most valuable customers are? This project, creat
 
 <img src='images/people.jpg' width='600'>
 
-## Project Outline
-
 #### Project Goals
 
 * Which group of customers generate the most revenue?
@@ -24,7 +22,17 @@ Note: These data sources are stored separately in a private repository and conta
 * HubSpot - Tracks data on marketing and sales campaigns
 * HelpScout - Tracks data on support tickets
 
-#### Methods
+#### Technologies Used
+
+* Python
+* Pandas
+* Numpy
+* AWS (EC2 instances)
+* Sklearn
+* Seaborn
+* Matplotlib
+
+#### Summary
 
 A combination of using APIs (Google Analytics, Helpscout) and direct downloads was used to obtain data from the above sources.
 
@@ -61,13 +69,3 @@ Many features were determined to be predictive of purchasing this high value lic
 <img src='images/likelihood-by-customer-category.png' width='900'>
 
 Potential directions for future studies include: adding features to the existing model related to text analysis of website descriptions and support ticket text, developing a model to predict website visitors who are most likely to continue on to make a purchase, and developing a model to predict warning signs for customer churn.
-
-#### Technologies Used
-
-* Python
-* Pandas
-* Numpy
-* AWS (EC2 instances)
-* Sklearn
-* Seaborn
-* Matplotlib
