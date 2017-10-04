@@ -2,26 +2,22 @@ from anonymizingdata import AnonymizingData
 from separatedatasourcecleaning import SeparateDataSets
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
-# from sklearn.cluster import KMeans
-# from sklearn.decomposition import PCA
 from sklearn.linear_model import SGDClassifier, LogisticRegression, ElasticNet
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, AdaBoostClassifier
 from sklearn.model_selection import cross_val_score
-# from imblearn.over_sampling import SMOTE
 from pprint import pprint
 import progressbar
 import sys
-import pudb
-import os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+# from sklearn.preprocessing import StandardScaler
+# from sklearn.tree import DecisionTreeClassifier, export_graphviz
+# from imblearn.over_sampling import SMOTE
 
 
 class DataCleaning(object):
@@ -31,6 +27,10 @@ class DataCleaning(object):
         self.hidden = AnonymizingData()
 
     def intializing_data(self):
+        '''
+        Loads all separate data sets and merges into one dataset for modeling purposes
+        '''
+
         # Reset to fix unicode errors
         reload(sys)
         sys.setdefaultencoding('utf8')
@@ -64,15 +64,19 @@ class DataCleaning(object):
         self.df = pd.merge(self.df, drip_df, how='left',
                            left_on='revenue:email', right_on='drip:email')
         self.df = pd.merge(self.df, hub_cust_df, how='left', left_on='revenue:email',
-                           right_on='hubcust:email')  # 41% null
+                           right_on='hubcust:email')
         self.df = pd.merge(self.df, hub_comp_df, how='left', left_on='revenue:domain',
-                           right_on='hubcomp:company_domain_name')  # 53% null
+                           right_on='hubcomp:company_domain_name')
         self.df = pd.merge(self.df, turk_df, how='left', left_on='revenue:domain',
-                           right_on='turk:turk_domain')  # 88% null
+                           right_on='turk:turk_domain')
         self.df = pd.merge(self.df, help_scout_df, how='left', left_on='revenue:email',
-                           right_on='helpscout:emails')  # 21% null
+                           right_on='helpscout:emails')
 
     def cleaning_data(self):
+        '''
+        Cleans dataset by consolidating duplicate rows, removing test purchase rows,
+        recoding variable types, and dropping columns that have leakage or large proportions of nulls
+        '''
         # Consolidating any duplicate customer rows
         self.df = self.df.groupby('revenue:email').first().reset_index()
 
@@ -104,7 +108,6 @@ class DataCleaning(object):
             'helpscout:number_support_tickets', 'helpscout:days_open', 'turk:answer.well-made_y']].astype(float)
 
         # Creating columns for revenue loss due to support tickets
-        # self.df['helpscout:months_open'] = self.df['helpscout:days_open'] / 30.
         self.df['helpscout:loss_per_customer'] = self.df['helpscout:days_open'] * 10.0
         self.df['adjusted_revenue'] = self.df['revenue:purchase_value'] - \
             self.df['helpscout:loss_per_customer']
@@ -117,14 +120,24 @@ class DataCleaning(object):
         self.df = self.hidden.drop_columns(self.df)
 
     def _reset_data_types(self, X):
+        '''
+        Resets which columns have numerical values and which have categorical values after dropping columns
+        '''
+        # Selecting floats and integers
         numerical_vals = X.select_dtypes(include=['float64', 'int64'])
         for column in numerical_vals.columns:
+            # Numerical columns that have less than 3 values are probably actually categories
             if len(numerical_vals[column].unique()) <= 3:
                 numerical_vals.drop(column, inplace=True, axis=1)
+        # Categorical values are any columns that are not numerical
         categorical_vals = X.drop(numerical_vals, axis=1)
         return numerical_vals, categorical_vals
 
     def modeling_prep(self):
+        '''
+        Prepares the dataset for modeling by creating dummy variables, dropping any remaining less useful columns,
+        creating a train test split, scaling the data, and filling null values
+        '''
         # Creating X & y variables
         y = self.df.pop('edd:licenses_license3')
         X = self.df
@@ -146,12 +159,12 @@ class DataCleaning(object):
             if '_nan' in column or '_unknown' in column or '@' in column:
                 X.drop(column, inplace=True, axis=1)
 
-        # Dropping additional dummy columns
+        # Dropping dummy columns that are not useful in the final model due to leakage, collinearity, or simply indicate unknown values
         X.drop(["intercom:industry_Not Online/Can't Access",
-                'edd:state_none'], inplace=True, axis=1)
-
-        # Exporting data to csv
-        X.to_csv('../data/all-datasets/cleaned_data_dropped.csv')
+                'helpscout:gender_x_male', 'hubcust:original_source_drill-down_1_INTEGRATION',
+                'hubcomp:original_source_data_2_contact-upsert', 'hubcust:original_source_drill-down_2_contact-upsert',
+                'helpscout:phototype_y_gravatar', 'hubcomp:original_source_data_1_INTEGRATION', 'turk:answer.industry_other_1.0', 'edd:payment_method_paypal_pro_1.0',
+                'edd:payment_method_paypal_standard_1.0', 'edd:payment_method_stripe_1.0'], inplace=True, axis=1)
 
         # Train test split
         X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=42)
@@ -159,19 +172,15 @@ class DataCleaning(object):
         # # Resetting indices for easier referencing
         X_train = X_train.reset_index()
         X_test = X_test.reset_index()
+        # Dropping index variable that shows up after reset
+        X_train.drop('index', inplace=True, axis=1)
+        X_test.drop('index', inplace=True, axis=1)
 
         # Resetting numerical columns after dropping columns
         numerical_vals, categorical_vals = self._reset_data_types(X)
 
-        # Filling in null values using a gridsearched linear model
+        # Filling null values using a smaller regression model
         for column in numerical_vals.columns:
-            # Instantiating model to predict values
-            el = ElasticNet()
-            # param_list = {'alpha': [0.01, 0.1, 1.0], 'l1_ratio': [0.0, 0.25, 0.5, 0.75, 1.0]}
-            param_list = {'alpha': [0.1], 'l1_ratio': [0.5]}
-            # Grid searching hyperparameters
-            g = GridSearchCV(el, param_list, scoring='neg_mean_squared_error',
-                             cv=5, n_jobs=3, verbose=1)
             # Getting indices in which the given column is not null
             filled = list(X_train[column].dropna().index)
             # Getting all the X train data for the rows in which the given column is not blank
@@ -179,9 +188,9 @@ class DataCleaning(object):
                 lambda x: x.fillna(x.mean()), axis=0).iloc[filled]
             # Getting the column to be filled data where it is not null
             mini_training_target = X_train[column].iloc[filled]
-            # Fitting the model that will be used to fill the null values
-            g.fit(mini_training_data, mini_training_target)
-            model = g.best_estimator_
+            # Instantiating model to predict values
+            model = ElasticNet(alpha=0.1, l1_ratio=0.5)
+            model.fit(mini_training_data, mini_training_target)
             # Getting indices in which the given column is null
             nulls = [x for x in X_train.index if x not in filled]
             # Getting all the X train data for the rows in which the given column has blank values
@@ -229,56 +238,64 @@ class DataCleaning(object):
             X_train_reduced = X_train[best_features]
             X_test_reduced = X_test[best_features]
 
-        # Scaling train data
-        scaler = StandardScaler()
-        # Resetting numerical values
-        numerical_vals, categorical_vals = self._reset_data_types(X_train_reduced)
-        # Scaling data
-        X_train_scaled = scaler.fit_transform(X_train_reduced[numerical_vals.columns])
-        X_train_scaled = np.concatenate(
-            [X_train_scaled, X_train_reduced.drop(numerical_vals.columns, axis=1)], axis=1)
+        # # Scaling train data - commented out due to dropping all numerical features after l1 regression!
+        # scaler = StandardScaler()
+        # # Resetting numerical values
+        # numerical_vals, categorical_vals = self._reset_data_types(X_train_reduced)
+        # # Scaling data
+        # X_train_scaled = scaler.fit_transform(X_train_reduced[numerical_vals.columns])
+        # X_train_scaled = np.concatenate(
+        #     [X_train_scaled, X_train_reduced.drop(numerical_vals.columns, axis=1)], axis=1)
 
-        # # Using SMOTE to generate extra synthetic samples of the smaller class
+        # # Using SMOTE to generate extra synthetic samples of the smaller class -- did not help with final scoring
         # X_train_resampled, y_train_resampled = SMOTE().fit_sample(X_train_scaled, y_train)
 
-        # Scaling test data
-        X_test_scaled = scaler.transform(X_test_reduced[numerical_vals.columns])
-        X_test_scaled = np.concatenate(
-            [X_test_scaled, X_test_reduced.drop(numerical_vals.columns, axis=1)], axis=1)
+        # # Scaling test data
+        # X_test_scaled = scaler.transform(X_test_reduced[numerical_vals.columns])
+        # X_test_scaled = np.concatenate(
+        #     [X_test_scaled, X_test_reduced.drop(numerical_vals.columns, axis=1)], axis=1)
+
+        # Transforming X data into numpy arrays for easier calculations later after scaling is no longer needed
+        X_train_scaled = np.array(X_train_reduced)
+        X_test_scaled = np.array(X_test_reduced)
 
         return X_train_scaled, X_test_scaled, y_train, y_test, X_train_reduced
 
     def feature_selection(self, X_train_scaled, X_test_scaled, y_train, y_test, X_train, plot=False):
-        model = LogisticRegression(C=5)
+        '''
+        Selects only the twenty best features, defined as those variables that create the greatest drop in f1 score when left out of the model
+        '''
+        # Intantiating regression model
+        model = LogisticRegression(C=17)
         model.fit(X_train_scaled, y_train)
-        # y_test_predicted = model.predict(X_test_scaled)
+        # Getting a baseline best score to compare to using cross validation
         best_score = np.mean(cross_val_score(model, X_train_scaled,
                                              y_train, scoring='f1_weighted', cv=5))
 
+        # Creating an empty list of change in f1 score to append to
         change_f1 = []
         bar = progressbar.ProgressBar()
         # Cycling through all features
         for i in bar(range(len(X_train.columns))):
-            model = LogisticRegression(C=5)
+            model = LogisticRegression(C=17)
             # Dropping one feature to see how the model performs
             temp_X_train = np.delete(X_train_scaled, i, 1)
-            # temp_X_test = np.delete(X_test_scaled, i, 1)
             # Fitting the model with all features minus one
             model.fit(temp_X_train, y_train)
-            # Predicting class
-            # y_test_predicted = model.predict(temp_X_test)
-            # Scoring the model
-            # f1 = f1_score(y_test, y_test_predicted, average='weighted')
+            # Scoring the model using cross validation
             f1 = np.mean(cross_val_score(model, temp_X_train,
                                          y_train, scoring='f1_weighted', cv=5))
             # Creating a list of change in f1 scores based on dropping features
             # More negative numbers = f score drops by that amount without that variable
             change_f1.append(f1 - best_score)
 
+        # Creating a pandas series with the features associated with their respective changes in f1 scores
         feature_importances = pd.Series(change_f1, index=X_train.columns)
         feature_importances = feature_importances.sort_values()
 
+        # Plotting changes in f1 scores
         if plot:
+            # Setting up default larger font sizes for graphs
             mpl.rcParams.update({
                 'font.size': 16.0,
                 'axes.titlesize': 'large',
@@ -288,12 +305,14 @@ class DataCleaning(object):
                 'legend.fontsize': 'small',
             })
 
+            # Creating a graph of all f1 score changes
             fig = plt.figure(figsize=(50, 200))
             ax = fig.add_subplot(111)
             ax.set_title('Feature Importances')
             feature_importances.plot(kind='barh')
             plt.savefig('../images/feature_importances.png')
 
+            # Creating a graph of f1 score changes that are negative (and thus may be important in the model)
             negative_impact = feature_importances[feature_importances < 0.0]
             fig = plt.figure(figsize=(50, 80))
             ax = fig.add_subplot(111)
@@ -301,9 +320,12 @@ class DataCleaning(object):
             negative_impact.plot(kind='barh')
             plt.savefig('../images/negative_impact.png')
 
+        # Getting features in list form
         columns = list(X_train.columns)
+        # Grabbing the 20 features that had the biggest impact on f1 score when left out
         indices = [columns.index(feature) for impact, feature in zip(
             feature_importances, feature_importances.index) if impact < 0.0][:20]
+        # Resetting the X variables to only include the top 20 features
         X_train_scaled = X_train_scaled[:, indices]
         X_test_scaled = X_test_scaled[:, indices]
         X_train = X_train[[columns[x] for x in indices]]
@@ -311,10 +333,12 @@ class DataCleaning(object):
         return X_train_scaled, X_test_scaled, X_train
 
     def model_testing(self, model, X_train_scaled, y_train, X_train):
+        '''
+        Uses grid searching to test different models and different hyperparameters
+        '''
         if model == 'LogisticRegression':
             model = LogisticRegression()
             # param_list = {'penalty': ['l1', 'l2'], 'C': [1, 5, 10, 15]}
-            # param_list = {'penalty': ['l1', 'l2'], 'C': np.arange(5, 25, 2)}
             param_list = {'C': np.arange(5, 25, 2)}
         elif model == 'KNeighborsClassifier':
             model = KNeighborsClassifier()
@@ -347,64 +371,86 @@ class DataCleaning(object):
         # Grid searching hyperparameters
         g = GridSearchCV(model, param_list, scoring='f1_weighted',
                          cv=5, n_jobs=3, verbose=10)
+        # Fitting grid searched model
         g.fit(X_train_scaled, y_train)
+        # Printing detailed results from gridsearching
         results = g.cv_results_
         print('\n\n')
         pprint(results)
         print('\n\n')
+        # Printing best hyperparameters and the associated weighted f1 score
         print('Best Params: {}, Best Score: {}'.format(g.best_params_, g.best_score_))
 
+        # Printing coefficients of the features used
         coefs = list(g.best_estimator_.coef_)[0]
         self.print_coefficients(X_train, coefs)
 
     def final_model(self, X_train_scaled, X_test_scaled, y_train, y_test, X_train):
-        model = LogisticRegression(C=5)
+        '''
+        Fits best model using best hyperparameters from grid search on the test data and calculates final metrics
+        '''
+        model = LogisticRegression(C=17)
         model.fit(X_train_scaled, y_train)
         y_test_predicted = model.predict(X_test_scaled)
+        # Scoring model using weighted scores due to imbalanced class
         print('F1 Score: {}'.format(f1_score(y_test, y_test_predicted, average='weighted')))
         print('Precision: {}'.format(precision_score(y_test, y_test_predicted, average='weighted')))
         print('Recall: {}'.format(recall_score(y_test, y_test_predicted, average='weighted')))
         print('Accuracy: {}'.format(accuracy_score(y_test, y_test_predicted)))
+        # Printing coefficients of features used
         coefs = list(model.coef_)[0]
         self.print_coefficients(X_train, coefs)
+        # Commented out options for decision trees
         # coefs = list(model.feature_importances_)
         # self.print_tree(model, X_train)
+        return y_test_predicted, y_test
 
     def print_coefficients(self, X_train, coefs):
+        '''
+        Prints coefficients model in order of highest values
+        '''
+        # Creating a list of features
         features = list(X_train.columns)
 
         importances = []
         for x, y in zip(features, coefs):
+            # Connecting features with their corresponding coefficients
             importances.append([x, y])
 
+        # Sort coefficients in decreasing order of absolute values of the coefficients
         importances.sort(key=lambda row: abs(row[1]), reverse=True)
-        print('\n\n')
+        # Cycling through the list to print for nicer formatting
         print('Coefficients:')
-        for pair in importances[:1000]:
+        for pair in importances:
             if pair[1] == 0.0:
                 break
             else:
                 print(pair)
 
-    def print_tree(self, model, X_train):
-        export_graphviz(model, out_file='decision-tree.dot', feature_names=X_train.columns)
-        os.system('dot -Tpng decision-tree.dot -o decision-tree.png')
+    # def print_tree(self, model, X_train):
+    #     '''
+    #     Optional function to create a visual depiction of a decision tree model
+    #     '''
+    #     # Exporting text form of decision tree
+    #     export_graphviz(model, out_file='decision-tree.dot', feature_names=X_train.columns)
+    #     # Converting text to a visual png file
+    #     os.system('dot -Tpng decision-tree.dot -o decision-tree.png')
 
 
 if __name__ == '__main__':
     dc = DataCleaning()
 
-    dc.intializing_data()
-    dc.cleaning_data()
-    X_train_scaled, X_test_scaled, y_train, y_test, X_train = dc.modeling_prep()
+    # dc.intializing_data()
+    # dc.cleaning_data()
+    # X_train_scaled, X_test_scaled, y_train, y_test, X_train = dc.modeling_prep()
+    #
+    # # Compressing data for faster performance
+    # args = {'X_train_scaled': X_train_scaled,
+    #         'X_test_scaled': X_test_scaled, 'y_train': y_train, 'y_test': y_test}
+    # np.savez_compressed('../data/all-datasets/Xycompressed_classification', **args)
+    # X_train.to_pickle('../data/all-datasets/X_train_classification')
 
-    # Compressing data for faster performance
-    args = {'X_train_scaled': X_train_scaled,
-            'X_test_scaled': X_test_scaled, 'y_train': y_train, 'y_test': y_test}
-    np.savez_compressed('../data/all-datasets/Xycompressed_classification', **args)
-    X_train.to_pickle('../data/all-datasets/X_train_classification')
-
-    # Loading compressed data
+    # Loading compressed and processed data
     npz = np.load('../data/all-datasets/Xycompressed_classification.npz')
     X_train_scaled = npz['X_train_scaled']
     X_test_scaled = npz['X_test_scaled']
@@ -417,47 +463,34 @@ if __name__ == '__main__':
 
     # dc.model_testing('LogisticRegression', X_train_scaled, y_train, X_train)
 
-    dc.final_model(X_train_scaled, X_test_scaled, y_train, y_test, X_train)
+    y_test_predicted, y_test = dc.final_model(
+        X_train_scaled, X_test_scaled, y_train, y_test, X_train)
 
     #################################################
-    # F1 Score: 0.755425683687
-    # Precision: 0.766511464274
-    # Recall: 0.818433179724
-    # Accuracy: 0.818433179724
+    # Printed Results:
+    # F1 Score: 0.743584054581
+    # Precision: 0.732450544689
+    # Recall: 0.812903225806
+    # Accuracy: 0.812903225806
     #
     # Coefficients:
-    # ['edd:state_MB', 2.6519095608306498]
-    # ['drip:time_zone_America/Nassau', 2.4877312147840009]
-    # ['turk:answer.industry_retail_1.0', 2.3909167870753332]
-    # ['hubcomp:time_zone_Australia/Sydney', -1.8881449890797348]
-    # ['intercom:country_Mexico', -1.8707820542177354]
-    # ['intercom:industry_Energy & Environment', -1.7644646889223288]
-    # ['edd:payment_method_paypal_standard_1.0', 1.3099815869999256]
-    # ['edd:payment_method_paypal_pro_1.0', 1.3092051813194345]
-    # ['hubcomp:industry_Government Administration', -1.282342635142838]
-    # ['edd:payment_method_stripe_1.0', 1.1736176864671901]
-    # ['hubcust:country_HKG', 1.1320574068555984]
-    # ['edd:state_MD', 1.0181179263874418]
-    # ['intercom:industry_Fashion & Apparel', 0.96561081246881053]
-    # ['hubcomp:industry_Construction', 0.82226976042569033]
-    # ['edd:country_GB', -0.62774926579134571]
-    # ['drip:time_zone_Australia/Brisbane', 0.32202621380000584]
-    # ['helpscout:number_support_tickets', 0.30683121060736074]
-    # ['edd:country_US', 0.18009564948901546]
-    # ['hubcomp:state/region_DC', -0.067191259390299268]
-    # ['intercom:browser_safari', -0.057335901207023733]
-    ##################################################
-    # Logistic regression
-    # Best Params: {'penalty': 'l2', 'C': 5}, Best Score: 0.777238452282
-    ##################################################
-    # Decision tree
-    # Best Params: {'max_features': 0.79999999999999993, 'min_samples_split': 0.1, 'criterion': 'entropy', 'max_depth': 79}, Best Score: 0.802447822331
-    ##################################################
-    # SVC (linear)
-    # Best Params: {'C': 5}, Best Score: 0.767679168076
-    ##################################################
-    # SGDClassifier
-    # Best Params: {'alpha': 0.00091000000000000011}, Best Score: 0.790229391565
-    ##################################################
-    # KNeighborsClassifier
-    # Best Params: {'n_neighbors': 2}, Best Score: 0.860791628082 -- overfit
+    # ['turk:answer.industry_retail_1.0', 4.0302363383517417]
+    # ['drip:time_zone_America/Anchorage', 3.6834776982065898]
+    # ['drip:time_zone_America/Nassau', 3.6834776982065898]
+    # ['drip:time_zone_Asia/Beirut', 3.0729742025156392]
+    # ['intercom:industry_Consulting', 2.475049013510481]
+    # ['drip:time_zone_America/Argentina/Buenos_Aires', -2.088771196421217]
+    # ['turk:answer.industry_events_services_1.0', 2.0810199188826477]
+    # ['drip:time_zone_UTC', 2.0810199188826477]
+    # ['intercom:industry_Employment', 1.7911025393175044]
+    # ['intercom:industry_Security', 1.4826125036485247]
+    # ['hubcomp:industry_Recreational Facilities and Services', -1.4533954589597129]
+    # ['hubcomp:industry_Industrial Automation', 1.4033048434380999]
+    # ['hubcomp:industry_Insurance', 1.4033048434380999]
+    # ['turk:answer.industry_non-profit_organization_management_1.0', 1.3813631898102734]
+    # ['drip:time_zone_Pacific/Auckland', 1.1445723585807723]
+    # ['intercom:industry_Fashion & Apparel', 1.1061725247647098]
+    # ['intercom:industry_Real Estate', 0.81556118158597257]
+    # ['drip:time_zone_America/Phoenix', 0.62796255167596615]
+    # ['intercom:industry_Sports & Leisure', 0.42756889922925145]
+    # ['intercom:industry_Events & Conferences', 0.37140063066828877]

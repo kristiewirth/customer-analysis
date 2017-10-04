@@ -10,6 +10,9 @@ class SeparateDataSets(object):
         self.hidden = AnonymizingData()
 
     def google_plus_EDD(self):
+        '''
+        Creates one file for all combined transaction data from EDD and Google Analytics
+        '''
         # Reading in all the separate csv files
         df1 = pd.read_csv('../data/google-data/google_dimensions_9-20-17_enddate_2014-10-31.csv',
                           low_memory=False, na_values='(not set)')
@@ -100,6 +103,9 @@ class SeparateDataSets(object):
         all_transactions_df.to_pickle('../data/EDD/all_transactions_google_EDD')
 
     def meta_data_cleaning(self):
+        '''
+        Cleans meta data file and creates renewal variable for use later
+        '''
         # Reading CSV
         meta_df = pd.read_csv('../data/EDD/meta-data.csv', error_bad_lines=False)
 
@@ -110,6 +116,9 @@ class SeparateDataSets(object):
         self.renewals = list(meta_df[meta_df['meta_key'] == '_edd_sl_is_renewal']['post_id'])
 
     def revenue_data_cleaning(self):
+        '''
+        Cleans revenue file and pickles the cleaned version
+        '''
         # Reading CSV
         revenue_df = pd.read_csv('../data/EDD/customer-revenue.csv')
 
@@ -127,6 +136,9 @@ class SeparateDataSets(object):
         revenue_df.to_pickle('../data/all-datasets/revenue_df')
 
     def transaction_data_cleaning(self):
+        '''
+        Cleans transaction file and pickles the cleaned version
+        '''
         # Reading pickle
         EDD_df = pd.read_pickle('../data/EDD/all_transactions_google_EDD')
 
@@ -195,6 +207,9 @@ class SeparateDataSets(object):
         EDD_df.to_pickle('../data/all-datasets/EDD_df')
 
     def intercom_data_cleaning(self):
+        '''
+        Cleans Intercom file (customer communication data) and pickles the cleaned version
+        '''
         intercom_df = pd.read_csv('../data/intercom/intercom-9-1-17.csv')
 
         # Removing duplicate records
@@ -232,6 +247,9 @@ class SeparateDataSets(object):
         intercom_df.to_pickle('../data/all-datasets/intercom_df')
 
     def drip_data_cleaning(self):
+        '''
+        Cleans Drip file (customer emails) and pickles the cleaned version
+        '''
         # Reading CSV
         drip_df = pd.read_csv('../data/drip/drip-subscribers.csv')
 
@@ -251,20 +269,27 @@ class SeparateDataSets(object):
             except:
                 lst.append([])
         drip_df['drip:campaign_names'] = lst
+        # Unstacking campaign name variable to pull out each label from the list
         temp_df = pd.DataFrame(drip_df['drip:campaign_names'].apply(pd.Series).stack())
         temp_df.columns = ['drip:campaign_names']
         temp_df['values'] = 1
         temp_df['index'] = [x[0] for x in temp_df.index]
+        # Pivoting a smaller dataframe to get a dummy variable for each campaign name
         temp_df = pd.DataFrame(temp_df.pivot(
             columns='drip:campaign_names', index='index', values='values')).reset_index()
+        # Merging pivoted table of new dummy variables with original dataframe
         drip_df = pd.merge(drip_df, temp_df, left_on='index',
                            right_on='index', how='left')
+        # Dropping index variable
         drip_df.drop('index', inplace=True, axis=1)
 
         # Pickling data
         drip_df.to_pickle('../data/all-datasets/drip_df')
 
     def hubspot_cust_data_cleaning(self):
+        '''
+        Cleans Hubspot customer file (marketing data) and pickles the cleaned version
+        '''
         # Reading CSV
         hub_cust_df = pd.read_csv(
             '../data/hubspot/hubspot-crm-view-contacts-all-contacts-2017-09-02.csv')
@@ -277,6 +302,9 @@ class SeparateDataSets(object):
         hub_cust_df.to_pickle('../data/all-datasets/hub_cust_df')
 
     def hubspot_comp_data_cleaning(self):
+        '''
+        Cleans Hubspot company file (marketing data on customer's companies) and pickles the cleaned version
+        '''
         # Reading CSV
         hub_comp_df = pd.read_csv(
             '../data/hubspot/hubspot-crm-view-companies-all-companies-2017-09-02.csv')
@@ -289,6 +317,9 @@ class SeparateDataSets(object):
         hub_comp_df.to_pickle('../data/all-datasets/hub_comp_df')
 
     def turk_data_cleaning(self):
+        '''
+        Cleans MechanicalTurk file (experiment to have participants label category of customer website) and pickles the cleaned version
+        '''
         # Reading CSV
         turk_df = pd.read_csv('../data/mechanical-turk/MechanicalTurkData.csv')
 
@@ -310,6 +341,7 @@ class SeparateDataSets(object):
         # Making an average rating variable
         avg_df = pd.DataFrame(turk_df.groupby('Input.website_url').mean()['Answer.well-made'])
         avg_df['Input.website_url'] = avg_df.index
+        # Merging average rating back with original dataset
         turk_df = pd.merge(turk_df, avg_df, how='left', on='Input.website_url')
         turk_df.drop('Answer.well-made_x', inplace=True, axis=1)
 
@@ -325,6 +357,9 @@ class SeparateDataSets(object):
         turk_df.to_pickle('../data/all-datasets/turk_df')
 
     def helpscout_data_cleaning(self):
+        '''
+        Cleans Helpscout file (support ticket data) and creates a CSV of the cleaned version
+        '''
         # Reading CSV
         help_scout_df = pd.read_pickle('../data/help-scout/helpscout_simplified')
 
@@ -351,12 +386,16 @@ class SeparateDataSets(object):
                 lst.append([])
         help_scout_df['helpscout:email_types'] = lst
         for column in ['helpscout:phone_types', 'helpscout:email_types']:
+            # Unstacking phone and email types from lists per customer
             temp_df = pd.DataFrame(help_scout_df[column].apply(pd.Series).stack())
             temp_df.columns = [column]
+            # Creating a constant to become a dummy variable later
             temp_df['values'] = 1
             temp_df['index'] = [x[0] for x in temp_df.index]
+            # Pivoting to get dummy variables for each phone & email type
             temp_df = pd.DataFrame(temp_df.pivot(
                 columns=column, index='index', values='values')).reset_index()
+            # Renaming columns of new dummy variables
             if column == 'helpscout:phone_types':
                 temp_df.columns = ['index', 'home_phone', 'mobile_phone', 'work_phone']
             elif column == 'helpscout:email_types':
@@ -365,11 +404,13 @@ class SeparateDataSets(object):
                                      right_on='index', how='left')
         help_scout_df.drop('index', inplace=True, axis=1)
 
-        # Pickling data
-        # help_scout_df.to_pickle('../data/all-datasets/help_scout_df')
+        # Creating CSV (to eliminate data type related pickling errors that occurred)
         help_scout_df.to_csv('../data/all-datasets/help_scout_df')
 
     def pickle_all(self):
+        '''
+        Function to easily run all above functions at once
+        '''
         # self.google_plus_EDD()
         self.meta_data_cleaning()
         self.revenue_data_cleaning()
