@@ -2,8 +2,6 @@
 
 Have you ever wondered who your most valuable customers are? This project, created for a software company, sought to identify those who stand out above the rest.
 
-<img src='images/people.jpg' width='600'>
-
 ### Project Goals
 
 * Which group of customers generate the most revenue?
@@ -59,12 +57,8 @@ Despite the fact that License 3 customers tended to submit more support tickets,
 
 Based on these findings, customers who bought the License 3 were determined to be highly valuable, and thus were the target of the rest of the study. Various classification models were tested to determine which customers were more likely to buy this license at any point. Specifically, the following techniques were tested: logistic regression, KNeighbors, decision trees, SVR, SGD, bagging methods, and random forests.
 
-Simpler methods performed similarly to the more complex methods, so a basic logistic regression was chosen as the final model to maximize explainability. This model was able to classify which customers would purchase the License 3 with an overall accuracy of 81% (precision 77%, recall 81%).
+Simpler methods performed similarly to the more complex methods, so a basic logistic regression was chosen as the final model to maximize explainability. This model was able to classify which customers would purchase the License 3 with an overall accuracy of 80% (precision 76%, recall 80%).
 
 Many features were determined to be predictive of purchasing this high value license, most notably the customer location and their website category.
-
-<img src='images/likelihood-by-country.png' width='900'>
-
-<img src='images/likelihood-by-customer-category.png' width='900'>
 
 Potential directions for future studies include: adding features to the existing model related to text analysis of website descriptions and support ticket text, developing a model to predict website visitors who are most likely to continue on to make a purchase, and developing a model to predict warning signs for customer churn.
