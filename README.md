@@ -39,21 +39,21 @@ Furthermore, given that the data was coming from different sources, there were p
 
 Given that the goal was to predict high value customers, some initial regression models were created to predict revenue per customer. Techniques used included ElasticNet regression, KNeighbors, decision trees, SVC, SGD, and random forests. However, these predictions had too large of errors to be as useful as desired.
 
-<img src='images/revenue-distribution.png' width='900'>
+<img src='images/revenue-distribution.jpg' width='900'>
 
 Given these results, other ways of measuring customer value were explored. The company studied had three different software licenses available, with License 1 being the least expensive and License 3 being the most expensive.
 
-<img src='images/revenue-by-license.png' width='900'>
+<img src='images/median-revenue.jpg' width='900'>
 
 After discussions with the company, it was decided that revenue was only part of what made a customer valuable. In addition, customers that had a low quantity of support tickets and/or tickets that were open for shorter periods of time required less support work, and were thus very valuable to the company.
 
-<img src='images/support-tickets-by-license.png' width='900'>
+<img src='images/support-tickets.jpg' width='900'>
 
 Based on internal calculations, it was decided that for a given customer, each day that a support ticket remained open was a loss in revenue of $10. Using the total revenue minus adjustments for support tickets, an adjusted revenue per customer was calculated.
 
 Despite the fact that License 3 customers tended to submit more support tickets, this group still brought in the most revenue per customer on average, while the License 2 group brought in the least revenue.
 
-<img src='images/adjusted-revenue-by-license.png' width='900'>
+<img src='images/adjusted-revenue.jpg' width='900'>
 
 Based on these findings, customers who bought License 3 were determined to be highly valuable, and thus were the target of the rest of the study.
 
@@ -61,11 +61,11 @@ Given that only 24% of customers chose to buy this license, several techniques f
 
 Simpler methods performed similarly to the more complex methods, so a basic logistic regression was chosen as the final model to maximize explainability. This model was able to classify which customers would purchase License 3 with an overall accuracy of 81% (precision 73%, recall 81%).
 
-Initially, many features seemed to be predictive of purchasing this high value license. However, after retesting the model after dropping various variables, the model was able to achieve a similar accuracy rate with only twenty of the most predictive features.
+Initially, many features seemed to be predictive of purchasing this high value license. In order to simplify the model, a logistic regression with l1 regularization technique was implemented, which reduced the number of features significantly, but still was rather complex. Thus, the regularization was followed by recursive feature elimination to determine the twenty most predictive features in the model. This simplified model was able to achieve a better f1 score and accuracy score than the original model.
 
-Customer industry was a major predictor, with customers who had websites centered around retail, consulting, or event services being far more likely to buy License 3.
+In terms of what information the model conveyed, customer industry was a major predictor, with customers who had websites centered around retail, consulting, or event services being 56 times more likely to buy License 3.
 
-<img src='images/customer-categories.png' width='900'>
+<img src='images/customer-categories.jpg' width='900'>
 
 Customer location (measured by UTC offset time zones) was the other major predictor, with customers in Alaska and the Northeast US being most likely to buy License 3, and those in areas of South America such as Argentina and Brazil being less likely to buy this license.
 
