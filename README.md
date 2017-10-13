@@ -67,7 +67,7 @@ In terms of what information the model conveyed, customer industry was a major p
 
 <img src='images/customer-categories.jpg' width='900'>
 
-Customer location (measured by UTC offset time zones) was the other major predictor, with customers in Alaska and the Northeast US being most likely to buy License 3, and those in areas of South America such as Argentina and Brazil being less likely to buy this license.
+Customer location (measured by UTC offset time zones) was the other major predictor, with customers in Alaska and the Northeast US being around 39 times more likely to buy License 3.
 
 <img src='images/customer-time-zones.png' width='900'>
 
