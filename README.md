@@ -24,7 +24,8 @@ Have you ever wondered who your most valuable customers are? This project, creat
     │   └── separatedatasourcecleaning.py   <- Script for cleaning data sources before merging together for analysis
     │
     ├── requirements.txt                    <- The requirements file for reproducing the analysis environment;
-    │                                          generated with `pipreqs .` & can be installed using `pip install -r requirements.txt`
+    │                                          generated with `pipreqs .`;
+    │                                          can be installed using `pip install -r requirements.txt`
 
 ### Data Sources
 
@@ -91,4 +92,4 @@ Customer location (measured by UTC offset time zones) was the other major predic
 
 Potential directions for future studies include: continuing to test regression models for customer revenue after transforming the revenue variable, adding features to the existing model related to text analysis of website descriptions and support ticket text, developing a model to predict website visitors who are most likely to continue on to make a purchase, and developing a model to predict warning signs for customer churn.
 
-<p><small>Github layout inspired by the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>.</small></p>
+<i>Acknowledgements:</i> Github layout inspired by the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>.
