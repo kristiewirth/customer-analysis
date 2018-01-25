@@ -8,6 +8,24 @@ Have you ever wondered who your most valuable customers are? This project, creat
 * Which will generate more revenue - many small purchases with little support work or a few large purchases with many hours of support work needed?
 * What factors contribute to a customer being more likely to be more profitable?
 
+### Repository Layout
+
+    ├── README.md                           <- The top-level README with a project summary
+    │
+    ├── images/                             <- All images used through this project
+    │
+    ├── presentation/                       <- Slides used for presentations of this project
+    │
+    ├── src/                                <- Source code for use in this project
+    │   ├── run.py                          <- Script that runs the entire project pipeline in order
+    │   ├── help-scout-api.py               <- Script for pulling support ticket data from HelpScout API
+    │   ├── google-analytics-api-query.py   <- Script for pulling Google Analytics data from API
+    │   ├── EDA.ipynb                       <- Exploratory data analysis notebook
+    │   └── separatedatasourcecleaning.py   <- Script for cleaning data sources before merging together for analysis
+    │
+    ├── requirements.txt                    <- The requirements file for reproducing the analysis environment;
+    │                                          generated with `pipreqs .`
+
 ### Data Sources
 
 Note: These data sources are stored separately in a private repository and contain data from 07/2014 through 08/2017.
